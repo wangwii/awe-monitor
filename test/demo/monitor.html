@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <script src="../javascripts/jquery-1.6.1.min.js" type="text/javascript"></script>
+  <style type="text/css">
+    body {
+      margin: 0;
+      padding: 0;
+    }
+
+    div#settings {
+      float: left;
+      width: 20%;
+      background-color: #c0c0c0;
+    }
+
+    div#content {
+      float: right;
+      width: 70%;
+    }
+  </style>
+  <title>Monitor for awe</title>
+</head>
+<body>
+<div id="settings">
+  <h3>Settings</h3>
+
+  <form style="padding: 5px;margin-left: 10px;">
+    <label for="url">URL:</label><br/>
+    <input id="url" type="text" value="http://localhost:3000"/><br/>
+
+    <label for="username">UserName And Password:</label><br/>
+    <input id="username" type="text" value="AmanziTelSU"/><br/>
+    <input id="password" type="text" value=""/><br/>
+
+    <br/>
+    <input type="button" id="login" value="Login"/>
+    <input type="button" id="start" value="Start"/>
+    <input type="button" id="stop" value="Stop"/>
+
+    <br/>
+    <label for="time">Time Interval(seconds):</label><br/>
+    <input id="time" type="text" value="5" width="200px"/><br/>
+    <label for="logs">Logs:</label><br/>
+    <textarea id="logs" rows="10"></textarea>
+  </form>
+</div>
+
+<div id="content">
+  <iframe style="width:100%;height:445px"></iframe>
+</div>
+
+<audio src="notify.wav" preload="auto" autoplay="autoplay">
+  Your browser does not support the audio tag.
+</audio>
+
+<script type="text/javascript">
+  $(document).ready(function(){
+    var iframe = $('iframe').get(0);
+    var audio = $('audio').get(0);
+    var log = $('#logs');
+
+    //play specify sound file.
+    var playSound = function(error, loop){
+      audio.src = error ? 'error.wav' : 'notify.wav';
+      audio.play();
+      audio.loop = !!loop;
+    };
+
+    $('#stop').click(function(){
+      audio.pause();
+      audio.loop = false;
+    });
+
+    $('#login').click(function(){
+      iframe.src = $('input#url').val();
+
+      $(iframe).load(function(){
+        var me = $(this.contentDocument);
+        var user = $('input:text[name="user_name"]', me);
+        user.val($('input#username').val());
+        var passwd = $('input:password[name="password"]', me);
+        passwd.val($('input#password').val());
+
+        $('input:submit', me).click();
+      });
+    });
+
+    var openDashboard = function(){
+      var me = $(iframe.contentDocument);
+      var groups = $('div.dashboard', me);
+      var idx = Math.ceil((Math.random() * (groups.size() - 1)));
+      $(groups[idx]).click();
+
+      var time = parseInt($('input#time').val());
+      time = time < 1 ? 5 : time;
+      setTimeout(openDashboard, time * 60 * 1000);
+    };
+
+    $("#start").click(function(){
+      //add intercept for dashboard loader
+      var Ext = iframe.contentWindow.Ext;
+      var clsPreviewer = iframe.contentWindow.Awe.view.report.Previewer;
+      Ext.override(clsPreviewer, {
+        loader: {
+          scripts: true,
+          callback: function(loader, success){
+            var now = new Date();
+            now = now.getHours() + ":" + now.getMinutes();
+            log.val(log.val() + now + '......:.[' + success + ']\r\n');
+            if (success) {
+              playSound(false, false);
+            } else {
+              playSound(true, true);
+            }
+          }
+        }
+      });
+
+      var cards = Ext.ComponentQuery.query('#dashboards')[0];
+      //console.log(cards.items.getCount());
+      //cards.items.clear();
+      openDashboard();
+    });
+  });
+</script>
+</body>
+</html>

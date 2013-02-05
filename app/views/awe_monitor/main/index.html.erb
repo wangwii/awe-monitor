@@ -1,0 +1,40 @@
+<% content_for :head do %>
+  <%= stylesheet_link_tag '/resources/css/ext-all.css', :media => 'all' %>
+  <%= javascript_include_tag '/javascripts/ext/ext-all.js' %>
+<% end %>
+<script type="text/javascript">
+  /*
+  <%= raw @jscontent %>;
+   */
+
+  Ext.create('Ext.panel.Panel', {
+    title: 'Panel',
+    width: 800,
+    height: 600,
+    renderTo: Ext.getBody(),
+    layout: 'fit',
+    itemId:'wangwei',
+    html: '<iframe width="800px" height="600px"></iframe>',
+    tools: [
+      {
+        type: 'refresh',
+        tooltip: 'Refresh form Data',
+        handler: function(event, toolEl, panel){
+          console.log('....:' + panel.ownerCt.getItemId());
+          var p = panel.ownerCt;
+          var iframeEle = p.body.down('iframe');
+          console.log(iframeEle);
+          iframeEle.dom.src = 'http://localhost:3000';
+        }
+      }
+    ],
+    listeners: {
+      afterrender: function(panel){
+        var iframeEle = this.body.down('iframe');
+        iframeEle.applyStyles({width: '100%', height: '100%'});
+      }
+    }
+  })
+</script>
+
+
